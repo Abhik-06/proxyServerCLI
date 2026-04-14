@@ -14,6 +14,13 @@ func handleSearch(w http.ResponseWriter, r *http.Request) {
 	// Context Declaration
 	ctx := r.Context()
 
+	// Loading in the .env file
+	err := godotenv.Load()
+	if err != nil {
+		fmt.Println("Warning : No .env, by extension no valid API keys found to initialise tool !")
+		return
+	}
+
 	// Reading in the data string
 	rawBytes, err := io.ReadAll(r.Body)
 	if err != nil {
