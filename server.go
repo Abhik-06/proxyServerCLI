@@ -15,13 +15,6 @@ func handleSearch(w http.ResponseWriter, r *http.Request) {
 	// Context Declaration
 	ctx := r.Context()
 
-	// Loading in the .env file
-	err := godotenv.Load()
-	if err != nil {
-		fmt.Println("Warning : No .env, by extension no valid API keys found to initialise tool !")
-		return
-	}
-
 	// Reading in the data string
 	rawBytes, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -46,11 +39,15 @@ func handleSearch(w http.ResponseWriter, r *http.Request) {
 
 	// Prompt Creation
 	collectedText := string(rawBytes)
-	prompt := "You are an the summarizer medium for an AI summarizer tool that is termianl based. Summarize the following text, short enough so that it can be displayed effectievely in the terminal. Return nothing except the summarized info. If the result is a code, return only the code. Do not return images of any kind, including markdown images. The content to be summarized is : " + collectedText
+	prompt := "You are the summarizer medium for an AI summarizer tool that is termianl based. Summarize the following text, short enough so that it can be displayed effectievely in the terminal. Return nothing except the summarized info. If the result is a code, return only the code. Do not return images of any kind, including markdown images. The content to be summarized is : " + collectedText
 
 	// Calling the AI
-	model := client.GenerativeModel("gemini-1.5-flash")
+	model := client.GenerativeModel("models/gemini-2.5-flash")
 	aiResponse, err := model.GenerateContent(ctx, genai.Text(prompt))
+	if err != nil {
+		fmt.Println("Failed to generate AI response !\nPrecisely : ", err)
+		return
+	}
 
 	// Unpack content,
 	// transmit info back
@@ -67,11 +64,18 @@ func handleSearch(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	// Loading in the .env file
+	err := godotenv.Load()
+	if err != nil {
+		fmt.Println("Warning : No .env, by extension no valid API keys found to initialise tool !")
+		return
+	}
+
 	http.HandleFunc("/search", handleSearch)
 	fmt.Println("Proxy server : Request acknowledged")
 
-	err := http.ListenAndServe(":8000", nil)
-	if err != nil {
+	errLnS := http.ListenAndServe(":8000", nil)
+	if errLnS != nil {
 		fmt.Println(err)
 		return
 	}
